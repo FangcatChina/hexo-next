@@ -1,0 +1,60 @@
+user:
+  name: Fangcat_Dev
+  first_name: Dev
+  last_name: Fangcat_
+  email: f20091219@outlook.com
+  domain: https://www.091209.xyz
+  avatar: /img/avatar.jpg
+  describe: 个人博客。
+  rule_text: 
+
+sidebar:
+  social:
+    - name: github
+      icon: fab fa-github
+      url: https://github.com/FangcatChina
+    - name: bilibili
+      icon: fab fa-bilibili
+      url: https://space.bilibili.com/588672425
+    - name: matrix
+      icon: fa-brands fa-matrix
+      url: https://matrix.to/#/@fangcat_dev:mozilla.org
+    - name: telegram
+      icon: fab fa-telegram
+      url: https://t.me/fangcatf
+    - name: discord
+      icon: fab fa-discord
+      url: https://discord.com/users/fangcat_dev
+    - name: mastodon
+      icon: fab fa-mastodon
+      url: https://mast.dragon-fly.club/@fangcat
+    - name: twitter
+      icon: fab fa-twitter
+      url: https://x.com/FFangcat29172
+  info: 
+    - key: Residence
+      val: Weihai
+
+assets:
+  icons:
+    type: font
+    css: https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.0/css/all.min.css
+    js:
+
+banner:
+  index:
+    type: img
+    bgurl: /img/bg.jpg
+    banner_title: 反复投上幽灵般的反对票。
+    banner_text: 雷平阳 - 《我》
+
+creative_commons:
+  license: by-nc-sa
+  language: deed.zh-hans
+  post: true
+  clipboard: false
+  
+footer:
+  copyright_year: 2026
+  custom_text: <a href="https://icp.gov.moe/?keyword=20250976" rel="noopener" target="_blank">萌ICP备20250976号</a>
+
