@@ -1,0 +1,139 @@
+---
+title: 什么是“原子系统”？
+date: 2026-06-28 13:21:54
+tags: [Operating Systems,Videos]
+categories: 视频稿
+cover: /img/atomic-os/cover.png
+---
+
+> 视频稿，成品视频见https://www.bilibili.com/video/BV1vuJK6FEkD
+
+原子隐私，原子内存，原子服务...近些年，各大品牌厂商都在疯狂宣发自己的“原子项目”。不过，相较与20年前的一篇计算机博士论文，以及现在的各大GNU/Linux发行版，这些概念却显得尤为落后。今天，就让我们来聊聊“原子系统” (Atomic Operating System)。事先声明：我们所聊到的“原子”是指操作系统层面上的原子化，前面提到的那些“噱头”，我们这里并不会作太多详细介绍。那么，就让我们走进操作系统的发展浪潮，来看看这个“时代前沿”究竟是什么。
+
+## 1. 为何原子？（Nix）
+
+先问你一个问题：你有没有过这样的经历——在 Linux 上想装个软件，终端里敲下指令，结果弹出一串红色报错，费了半天劲把所需的依赖库装上，结果另一个软件又因为依赖冲突炸了。
+
+如果你有过这种体验，那么你也是 **“依赖地狱（Dependency Hell）”** 的受害者。
+
+2003 年，一位名叫 Eelco Dolstra 的年轻人在使用 Linux 时，也敏锐地察觉到了这个问题。大多数操作系统对依赖冲突的处理极其不完备（甚至可以说压根没怎么处理）——某些软件因为依赖库版本需求不同而无法共存，这给开发者和用户带来了巨大的不便：
+
+> Similarly, RPM does not allow two packages that contain files with equal path names to exist simultaneously in the system.  
+> ...  
+> In general, this means that we cannot have multiple versions of the same component installed simultaneously. It also means that it is hard for multiple users to independently select, install and manage software.  
+>  
+> 类似的，RPM 并不允许两个包含相同路径名称的软件包同时存在于系统中。  
+> ...  
+> 总体来说，这意味着我们不能同时安装相同组件的多个版本。这也意味着对于多用户系统来说，独立地选择、安装、管理软件并不容易。  
+> 来自《The Purely Functional Software Deployment Model》，Eelco Dolstra
+
+Windows 和 macOS 也好不到哪里去。打开某些软件的安装目录，一大堆 DLL 库映入眼帘，令人感到头皮发麻。与 Linux 不同，Windows 不倾向于使用包管理器去统一管理软件包与库的关系，用软件自带所需库的方式来解决依赖问题，这虽然在一定程度上缓解了依赖冲突，却导致依赖库在各个应用之间重复打包，磁盘占用率飙升（PS:想亲身实践的可以自己统计你的系统里有多少chromium和7z.dll）：
+
+> Windows and Mac OS X tend to use monolithic deployment for applications: except for some large-grained dependencies on the operating system environment (e.g., on the kernel, the core GUI libraries, or Direct X), dependencies tend to be distributed as part of the application itself, with no sharing of dependencies between applications.  
+>  
+> Windows 与 Mac OS X 倾向于使用单体式部署——某些大型依赖除外（例如内核中的核心 GUI 库或 Direct X），依赖库更倾向于作为应用本身的一部分而分发，应用之间不存在依赖共享。  
+> 来自《The Purely Functional Software Deployment Model》，Eelco Dolstra
+
+不仅仅是安装软件时的依赖问题，即使对于一个已经装好的系统，也存在 **“不可复现”** 的麻烦，导致重装系统时你得导出你所有的软件包名单挨个安装，这个过程费时费力到令人抓狂，开发者在开发应用时也无法保证客户端的运行状况：
+
+> The fact that a component works in a test environment, does not guarantee that it will work on a client site, since the test environment may provide components that are not explicitly declared as dependencies. As a consequence, component compositions are not **reproducible**. The installation of components in a common directory makes it hard to install multiple versions of a component or to roll back to a previous configuration if it turns out that upgrading produces a faulty configuration.  
+>  
+> 由于测试环境可能提供和被声明作为依赖的组件不同的依赖，一个组件能在测试环境中运行的事实，并不能保证它也能在客户端侧运行。结果就导致组件的组成**不可复现**。在公共目录中安装组件，如果升级导致错误的配置，安装多个版本组件以及回滚到先前的配置就显得尤为困难。  
+> 来自《The Purely Functional Software Deployment Model》，Eelco Dolstra
+
+而Eelco 意识到，现有的包管理方案再怎么修修补补，都治不了根。他需要一套全新的模型。于是在2006 年，Eelco 的博士论文 **《纯函数式包管理模型》** 发布，这篇论文被视为原子系统的“开山鼻祖”。他提出了一种极其前沿的包管理方案——**Nix**。与传统包管理器相比，Nix 能够完美处理依赖与干扰问题，能够稳定复现，而且不会像其他包管理器那样出现“更新一半关机，再打开软件就炸了”的情形，也使重装系统变成了复制粘贴一个配置文件的事。
+
+那么，这种如此强大的法术，究竟由什么驱动呢？
+
+## 2. 何为原子？
+
+学过初中化学的各位都知道，原子(Atom)是化学反应中不可再分的基本单位。它难以拆分，难以被更改，没有“半成品”，只有存在或不存在这两种状态。这正是原子系统的核心——**不可分割**。
+
+用过 Linux 的同学都知道：如果安装了多个内核，我们可以在引导系统时自由切换，安装、切换内核基本不会影响其他软件包。对照原子性的定义来看：编译后的内核不可拆分，切换内核也不可能只切一半——是的，这就是一个典型的**原子操作**。
+
+在原子系统中，我们可以把内核、操作系统、应用、数据比作相互包裹、密不可分的——**洋葱**。每次更新系统或软件时，每一层的“核”都只是被重新生成和替换。并且，原子系统绝不允许未完成的操作发生，不会出现“一颗老鼠屎坏了满锅粥”的情况。相比之下，给普通系统安装软件就像在一张由上百块布料拼成的毯子上打补丁——每次更换某块布料都可能对上层或下层的组件造成“毁灭性”打击，容易造成不稳定的情况发生。（补充：在现代Linux包管理环境已经极少见到这种现象，但仍然存在，尤其是RPM的Multimedia包组）
+
+而前面提到的某些厂商宣传的“原子”噱头，本质上只是管理更精细一些，然后取了个听起来高大上的名字，跟真正的原子操作可以说是八竿子打不着。
+
+这里也有一个常见的误区：很多人以为原子系统是“完全无法更改”的，根本上来讲，那是不可变系统。所以这种说法并不严谨。比如 NixOS 会提供 `/etc/nixos/configuration.nix`，你可以方便快捷地调节系统大大小小的配置。甚至在你**完全掌握其语法参数**后，比通过其他途径更优雅。以我自己为例：我是个不太“整洁”的人，每次装完一些软件包都会忘了卸载，而在 NixOS 里，这些“原子”就静静躺在配置文件里，可以随时删除，不会忘记，十分舒适。
+
+## 3. 原子与函数（Nix）
+
+> 注意！以下内容可能会略显枯燥。  
+> 由于本人未在其他发行版上使用过 Nix，下文可能会出现 Nix 与 NixOS 混为一谈的现象，还请批评指正。
+
+NixOS 以及 Nix 的工作原理主要在 Eelco 的两篇论文中被完整阐释：
+- 《The Purely Functional Software Deployment Model》
+- 《NixOS: A Purely Functional Linux Distribution》
+
+由于时间原因，我没有办法详细阅读两篇文章的全部内容，只读了 Introduction 部分。具体的实现，感兴趣的各位可以自行阅读余下的 Foundations 与 Applications。在此我会尽可能简单地阐释，不过也可能出现疏漏，还请指正。
+
+与其他发行版的分散式存储不同，在 NixOS 中，所有的软件包——无论是可执行文件还是源码——均存在于系统的“中央仓库” `/nix/store` 里，由 Nix 统一管理。在这个目录下，每个软件都被当作一个“原子”。Nix 并不关心这个原子里面有什么，它只需要知道这个原子应该与哪些原子相关联。
+
+乍一看，这比普通的包管理器只是多了一个统一化管理。不过，还记得前面提到的“完美避免依赖冲突”吗？这就要说到 Nix 的另一精妙机制：在每个原子构建时都会被打上一个**哈希值**。这个哈希值由多种方式生成，像身份证号一样具有唯一性，基本不会出现撞车的问题，因而多个版本、多个来源的软件包可以和谐共存。而且，这个机制强制要求所有原子在构建时指定依赖的完整路径，从此不再有“找不到依赖”的问题。哈希串的唯一性也赋予了其快速精确查找的能力——Nix 不需要去理解一个文件，只需要记录并扫描其依赖的哈希串，就能自动找到它。
+
+这和计算机编程中的**函数**思想完全一致：我不关心你是什么，我只关心我需要给你什么，你会给我吐出什么。简单，粗暴，优雅，快捷。
+
+> We show how a full-featured Linux distribution, NixOS, can be built and configured in a declarative way using principles borrowed from purely functional languages, giving rise to properties such as atomicity of upgrades and the ability to roll back.
+>
+> 我们展现了一个具有完整功能的Linux发行版，NixOS，它能够被用声明的方式，采用从纯粹函数式语言借来的原则被构建与配置，从而实现升级的原子性以及回滚能力等特性。
+>
+> 来自《NixOS: A Purely Functional Linux Distribution》，Eelco Dolstra
+
+
+至于 NixOS，它比 Nix 更加激进。Nix 仅仅将软件层原子化，而 NixOS 把**系统本身**也作为一个原子，和软件包一样进行管理。NixOS 继承了 Nix“多版本共存”的特性，其版本在此被称为“世代”。不同的是，对用户来说，自己从“使用者”转变为了“构建者”——设置系统前需要学习一门截然不同的编程语言，自行修改配置文件，重新构建系统，学习难度直线上升，更别提 Home Manager、Flakes 等花样用法了。
+
+不过，NixOS 并不是原子系统唯一的出路。
+
+## 4. 更多风味
+
+### 4.1. 用 Git 管理原子（OSTree）
+
+众所周知，Git 是目前业界公认的成熟的版本控制系统，多数大型项目如 Linux 内核等均使用 Git 进行管理。
+
+首先给一些不了解 Git 的读者澄清一个误区：尽管在 commit 时 Git 会显示改动文件的差异，但它并不通过这些差异存储文件，而是通过给每个版本**“存快照”**的方式存储。
+
+那么，我们能否用 Git 来管理原子系统？
+
+2011 年，Red Hat 工程师 Colin Walters 受 Git 启发，创造性地提出了 **OSTree** 这一原子系统概念。OSTree 与 Git 的思想几乎完全相同，最初被应用于 GNOME Continuous，后来推广到 Fedora Silverblue、Bluefin、Flatpak 等发行版与应用框架。OSTree 的最大特点是：可以随时远程拉取、自由切换系统版本，而不必担心系统软件包的版本问题。每次更新都会进行增量更新，并且系统文件只读，不允许随意修改，相比Nix，操作更加简单便捷，容易理解。
+
+不过，相比于 Nix，其不可变性明显较为劣势。并且由于 OSTree 只原子化了系统层面，并没有对所有软件进行原子化，依赖冲突还是不可避免地会出现。
+
+### 4.2. 双重身份（ABRoot 及其类似物）
+
+2009 年，Google 推出 ChromeOS，随之而来的是一种崭新的原子更新方式——**A/B System Update**。其本质上就是在本地磁盘保存当前操作系统的两个副本，且均为只读。比如我正在使用 A 分区，更新时对系统的改动会写入 B 分区。这样一来，改动不会影响当前正在使用的分区，只需重启即可完成更新；即使更新失败，也不会影响原先的 A 分区，可以自动回滚，便捷又安全。
+
+后来 Google 也将类似的思路推广到了 Android（即“无缝更新”）。不过要注意：**Android 的 A/B 更新通常采用增量方式**，而非每次下载完整的系统镜像。但双分区、可回滚的核心思想是一致的，可以说原子系统的应用非常广泛。
+
+类似的，Vanilla OS 采用的是**ABRoot**，本质相同——双分区+自动回滚设计。缺点是磁盘空间会多出一些占用，但总体在可接受范围内。插一句题外话：Vanilla OS使用自制的 Apx作为用户级应用管理器，能够兼容apt/dnf/pacman/apk等多种包管理器与格式，并且主要推广Flatpak进行应用管理，十分前沿新颖。可惜的是，Vanilla OS采用OCI镜像发布，需要 ghcr 进行网络安装，Flatpak 应用也存在中文字体、剪贴板同步等小毛病。
+
+有意思的是，OpenHarmony也采用了A/B分区的更新机制，不过其原子性明显不如上面提到的其他系统，可复现性也十分有限。
+
+由于后两种风味我本人并没有使用过，此处不做比较与进一步评价。
+
+### 4.3. 应用层的原子化 (Flatpak&AppImage)
+
+严格来说，Flatpak 和 AppImage 并不算“原子系统”，因为它们只原子化了应用层，而非整个操作系统。但它们身上确实闪耀着原子化的思想，可以称为 **half‑Atom**。
+
+- **AppImage**：一个文件就是一个应用，所有依赖都打包在里面。下载、加执行权限、双击运行——没有依赖冲突，甚至不需要“安装”这个动作。  
+- **Flatpak**：应用与运行时分离，每个应用只能看到自己的沙箱和自己的依赖副本。更新时下载完整的新镜像，支持多版本运行时共存。
+
+它们与 NixOS 的根本区别在于**粒度**：NixOS 原子化了整个系统，而 Flatpak/AppImage 只管用户应用。系统本身的更新仍然依赖传统的包管理器（除由OSTree管理的发行版）。又因为AppImage 几乎不共享依赖，Flatpak 通过运行时共享依赖，依赖地狱也被完美解决。
+
+不过，对于普通用户来说，AppImage 和 Flatpak 可能是最早接触到的“原子化”体验——装个 AppImage 不用装依赖，这就是原子理念在应用层的胜利。
+
+## 5. 总结
+
+回望操作系统半个多世纪的发展历程，每一次重大的技术变革，本质上都是对“复杂性”的一次重新定义和管理。从批处理系统到分时系统，从单任务到多任务，从单体内核到微内核，人类一直在试图驯服计算机系统这头日益复杂的野兽。原子操作系统的出现，正是这场持续斗争中最新、也可能是最彻底的一次尝试。
+
+但我们也必须看到原子系统的劣势：
+
+- 在NixOS里改设置，需要更改一大段配置文件，然后重新构建整个系统，较为耗时。
+- `/nix/store` 存储空间易占用过大，可能需经常清理世代。
+- 某些闭源程序在原子系统上运行不稳定。  
+- 配置文件与系统构建与传统Linux的逻辑完全不同。
+- 不允许直接执行二进制程序，需要修改配置文件或者构建包。
+
+所以，原子系统是一个有力的工具，但它并非适合所有人、所有场景。它更像是一把双刃剑，锋利、精准，但需要学习如何使用。
+
+看到这里，希望各位能对原子系统有一个更全面、更辨证的认识。它既有令人惊叹的魅力，也有不可忽视的代价。愿原子系统在日新月异的数字世界里继续演进，同时也希望未来的某一天，会有更多的社区贡献者来挑战它今天留下的难题。

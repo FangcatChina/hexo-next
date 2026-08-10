@@ -6,7 +6,16 @@ user:
   domain: https://www.091209.xyz
   avatar: /img/avatar.jpg
   describe: 个人博客。
-  rule_text: 
+
+top_bars:
+  - title: home
+    url: /
+  - title: categories
+    url: /categories/
+  - title: tags
+    url: /tags/
+  - title: archives
+    url: /archives/
 
 sidebar:
   social:
@@ -42,11 +51,15 @@ assets:
     js:
 
 banner:
+  use_cover: false
   index:
     type: img
     bgurl: /img/bg.jpg
     banner_title: 反复投上幽灵般的反对票。
     banner_text: 雷平阳 - 《我》
+  default: # 默认横幅配置
+    type: slideshow
+    bgurl: ["/img/bg.jpg","/img/bg2.jpg","/img/bg3.jpg"]
 
 creative_commons:
   license: by-nc-sa
@@ -58,3 +71,10 @@ footer:
   copyright_year: 2026
   custom_text: <a href="https://icp.gov.moe/?keyword=20250976" rel="noopener" target="_blank">萌ICP备20250976号</a>
 
+highlight:
+  theme: true
+  title: default
+  copy: true
+  lang: true
+  code_word_wrap: true
+  height_limit: 200 # 超出时，显示折叠按钮
