@@ -78,3 +78,8 @@ highlight:
   lang: true
   code_word_wrap: true
   height_limit: 200 # 超出时，显示折叠按钮
+
+favicon:
+    logo: /img/favicon.png
+    icon16: /img/favicon.png
+    icon32: /img/favicon.png
