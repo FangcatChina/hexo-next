@@ -16,7 +16,8 @@ top_bars:
     url: /tags/
   - title: archives
     url: /archives/
-
+  - title: friends
+    url: /links
 sidebar:
   social:
     - name: github
@@ -60,6 +61,18 @@ banner:
   default: # 默认横幅配置
     type: slideshow
     bgurl: ["/img/bg.jpg","/img/bg2.jpg","/img/bg3.jpg"]
+
+links:
+  - name: heveral的编程笔记
+    url: //www.heveral.top/
+    image: //www.heveral.top/favicon.ico
+
+links_info:
+  name: Frank's Blog 
+  url: https://www.091209.xyz/
+  avatar: /img/favicon.png
+  describe: Fangcat_Dev 的博客
+  rule_text: Nothing.
 
 creative_commons:
   license: by-nc-sa
